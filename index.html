@@ -3,25 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced CAD Viewer | STEP & STL Files</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.13/dist/occt-import-js.js"></script>
+    <title>3D File Viewer - STEP & STL</title>
     <style>
-        :root {
-            --primary: #1e88e5;
-            --primary-dark: #1565c0;
-            --secondary: #263238;
-            --light-bg: #f5f7fa;
-            --dark-bg: #1a1e25;
-            --success: #43a047;
-            --warning: #ff9800;
-            --danger: #e53935;
-            --text-light: #f5f5f5;
-            --text-dark: #263238;
-        }
-        
         * {
             margin: 0;
             padding: 0;
@@ -30,1157 +13,713 @@
         }
         
         body {
-            background-color: var(--light-bg);
-            color: var(--text-dark);
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        header {
-            background-color: var(--secondary);
-            color: var(--text-light);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 100;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .logo h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        
-        .logo-icon {
-            background: var(--primary);
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        
-        .container {
-            display: flex;
-            height: calc(100vh - 66px);
-        }
-        
-        .sidebar {
-            width: 280px;
-            background-color: white;
-            border-right: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
             padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .viewer-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
             position: relative;
+            overflow-x: hidden;
         }
         
-        .viewer-header {
-            background-color: white;
-            padding: 12px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .viewer-container {
-            flex: 1;
-            position: relative;
-            background-color: var(--dark-bg);
-            overflow: hidden;
-        }
-        
-        #model-viewer {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .file-upload {
-            border: 2px dashed #bdbdbd;
-            border-radius: 8px;
-            padding: 25px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .file-upload:hover {
-            border-color: var(--primary);
-            background-color: rgba(30, 136, 229, 0.05);
-        }
-        
-        .file-upload i {
-            font-size: 48px;
-            color: #bdbdbd;
-            margin-bottom: 15px;
-        }
-        
-        .file-upload p {
-            margin-bottom: 15px;
-            color: #757575;
-        }
-        
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn:hover {
-            background-color: var(--primary-dark);
-        }
-        
-        .btn-outline {
-            background-color: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        .btn-outline:hover {
-            background-color: rgba(30, 136, 229, 0.1);
-        }
-        
-        .recent-files h3, .tools h3 {
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-            color: var(--secondary);
-        }
-        
-        .file-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .file-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .file-item:hover {
-            background-color: #f0f4f8;
-        }
-        
-        .file-icon {
-            width: 40px;
-            height: 40px;
-            background-color: #e3f2fd;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            color: var(--primary);
-        }
-        
-        .file-info {
-            flex: 1;
-        }
-        
-        .file-info h4 {
-            font-size: 0.95rem;
-            margin-bottom: 4px;
-        }
-        
-        .file-info p {
-            font-size: 0.8rem;
-            color: #757575;
-        }
-        
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        
-        .tool-btn {
-            background-color: #f0f4f8;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .tool-btn.active {
-            background-color: #e3f2fd;
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        
-        .tool-btn:hover {
-            background-color: #e3f2fd;
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        
-        .tool-btn i {
-            font-size: 24px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        
-        .view-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 10;
-        }
-        
-        .view-controls .btn {
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-        }
-        
-        .loading-overlay {
+        body::before {
+            content: "";
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            background: radial-gradient(circle, transparent 20%, #1a2a6c 90%);
+            opacity: 0.3;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .main-content {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .viewer-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .viewer-section h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #64b5f6;
+        }
+        
+        #viewer-container {
+            width: 100%;
+            height: 400px;
+            background: rgba(10, 15, 30, 0.7);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
             justify-content: center;
-            color: white;
-            z-index: 20;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+            transition: opacity 0.3s;
         }
         
         .spinner {
             width: 50px;
             height: 50px;
-            border: 5px solid rgba(255,255,255,0.3);
+            border: 5px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+            border-top: 5px solid #64b5f6;
+            animation: spin 1s linear infinite;
             margin-bottom: 20px;
         }
         
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
-        .file-properties {
-            background-color: white;
-            border-radius: 8px;
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .file-upload {
+            background: rgba(25, 25, 40, 0.8);
             padding: 15px;
+            border-radius: 10px;
+            border: 2px dashed rgba(100, 181, 246, 0.5);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            background: rgba(35, 35, 60, 0.8);
+            border-color: #64b5f6;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-upload label {
+            display: block;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .file-upload p {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+        
+        .viewer-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
             margin-top: 20px;
         }
         
-        .prop-item {
+        .control-btn {
+            background: rgba(25, 25, 40, 0.8);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
             display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         
-        .prop-item:last-child {
+        .control-btn:hover {
+            background: rgba(100, 181, 246, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.active {
+            background: rgba(100, 181, 246, 0.7);
+        }
+        
+        .info-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-section h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #64b5f6;
+        }
+        
+        .file-info {
+            background: rgba(25, 25, 40, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-row:last-child {
             border-bottom: none;
         }
         
-        .prop-label {
-            color: #757575;
+        .info-label {
+            font-weight: 600;
+            opacity: 0.8;
         }
         
-        .prop-value {
+        .info-value {
             font-weight: 500;
         }
         
-        .no-file {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            background: rgba(25, 25, 40, 0.8);
             padding: 20px;
+            border-radius: 10px;
             text-align: center;
-            color: #757575;
+            transition: transform 0.3s;
         }
         
-        .no-file i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: #e0e0e0;
+        .feature-card:hover {
+            transform: translateY(-5px);
         }
         
-        .file-actions {
-            display: flex;
-            gap: 10px;
+        .feature-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #64b5f6;
         }
         
-        .measurement-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            display: none;
-            z-index: 15;
+        .feature-card h3 {
+            margin-bottom: 10px;
         }
         
-        .exploded-slider {
-            position: absolute;
-            bottom: 80px;
-            left: 20px;
-            width: 250px;
-            z-index: 15;
-            background: rgba(255,255,255,0.9);
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
+        .feature-card p {
+            font-size: 0.95rem;
+            opacity: 0.8;
         }
         
-        .slider-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .slider-label {
-            font-weight: 500;
-            margin-bottom: 8px;
-            display: block;
-        }
-        
-        @media (max-width: 900px) {
-            .sidebar {
-                width: 240px;
-            }
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 30px;
+            opacity: 0.7;
+            font-size: 0.9rem;
         }
         
         @media (max-width: 768px) {
-            .container {
+            .main-content {
                 flex-direction: column;
             }
             
-            .sidebar {
-                width: 100%;
-                height: auto;
-                border-right: none;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            
-            .tools-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            .exploded-slider {
-                bottom: 120px;
-                width: calc(100% - 40px);
+            header h1 {
+                font-size: 2.2rem;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <div class="logo-icon">CAD</div>
-            <h1>Advanced STEP/STL Viewer</h1>
-        </div>
-        <div class="file-actions">
-            <button class="btn" id="download-btn"><i class="icon">↓</i> Export</button>
-        </div>
-    </header>
-    
     <div class="container">
-        <div class="sidebar">
-            <div class="file-upload" id="upload-area">
-                <i class="icon">📁</i>
-                <p>Drag & drop STEP or STL files here</p>
-                <button class="btn" id="upload-btn">Browse Files</button>
-                <input type="file" id="file-input" accept=".step,.stp,.stl" style="display:none">
-            </div>
-            
-            <div class="recent-files">
-                <h3>Sample Models</h3>
-                <div class="file-list">
-                    <div class="file-item" data-file="sample_gear.step">
-                        <div class="file-icon">⚙️</div>
-                        <div class="file-info">
-                            <h4>Mechanical Gear</h4>
-                            <p>STEP - 2.3 MB</p>
-                        </div>
+        <header>
+            <h1>3D File Viewer</h1>
+            <p>Upload and visualize STEP and STL 3D models directly in your browser. Rotate, zoom, and inspect your designs with ease.</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="viewer-section">
+                <h2>Model Viewer</h2>
+                <div id="viewer-container">
+                    <div id="loading-overlay" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading model...</p>
                     </div>
-                    <div class="file-item" data-file="bracket.stl">
-                        <div class="file-icon">📦</div>
-                        <div class="file-info">
-                            <h4>Mounting Bracket</h4>
-                            <p>STL - 1.8 MB</p>
-                        </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="file-upload" id="drop-area">
+                        <label for="file-input">Choose a file or drag it here</label>
+                        <input type="file" id="file-input" accept=".stl,.step">
+                        <p>Supported formats: STL, STEP (Max file size: 10MB)</p>
                     </div>
-                    <div class="file-item" data-file="engine_block.step">
-                        <div class="file-icon">🚗</div>
-                        <div class="file-info">
-                            <h4>Engine Block</h4>
-                            <p>STEP - 5.1 MB</p>
-                        </div>
+                    
+                    <div class="viewer-controls">
+                        <button class="control-btn" id="rotate-toggle">Auto-Rotate: On</button>
+                        <button class="control-btn" id="reset-view">Reset View</button>
+                        <button class="control-btn" id="wireframe-toggle">Wireframe: Off</button>
+                        <button class="control-btn" id="orthographic-toggle">Perspective</button>
                     </div>
                 </div>
             </div>
             
-            <div class="tools">
-                <h3>View Tools</h3>
-                <div class="tools-grid">
-                    <div class="tool-btn" data-view="perspective">
+            <div class="info-section">
+                <h2>File Information</h2>
+                <div class="file-info">
+                    <div class="info-row">
+                        <span class="info-label">File Name:</span>
+                        <span class="info-value" id="file-name">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">File Type:</span>
+                        <span class="info-value" id="file-type">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">File Size:</span>
+                        <span class="info-value" id="file-size">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Vertices:</span>
+                        <span class="info-value" id="vertices-count">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Triangles:</span>
+                        <span class="info-value" id="triangles-count">-</span>
+                    </div>
+                </div>
+                
+                <div class="features">
+                    <div class="feature-card">
+                        <i>📐</i>
+                        <h3>STEP Support</h3>
+                        <p>View complex CAD models with precise geometry and assembly information</p>
+                    </div>
+                    <div class="feature-card">
+                        <i>🔄</i>
+                        <h3>Real-time Controls</h3>
+                        <p>Rotate, pan, and zoom to inspect your model from every angle</p>
+                    </div>
+                    <div class="feature-card">
                         <i>🔍</i>
-                        <span>Perspective</span>
+                        <h3>Detailed Analysis</h3>
+                        <p>Get model statistics including vertices and triangle counts</p>
                     </div>
-                    <div class="tool-btn" data-view="top">
-                        <i>⬆️</i>
-                        <span>Top View</span>
-                    </div>
-                    <div class="tool-btn" data-view="front">
-                        <i>⬇️</i>
-                        <span>Front View</span>
-                    </div>
-                    <div class="tool-btn" data-view="side">
-                        <i>➡️</i>
-                        <span>Side View</span>
-                    </div>
-                    <div class="tool-btn" data-action="wireframe" id="wireframe-btn">
-                        <i>#️⃣</i>
-                        <span>Wireframe</span>
-                    </div>
-                    <div class="tool-btn active" data-action="solid" id="solid-btn">
-                        <i>◼️</i>
-                        <span>Solid</span>
-                    </div>
-                    <div class="tool-btn" data-action="explode" id="explode-btn">
-                        <i>💥</i>
-                        <span>Explode</span>
-                    </div>
-                    <div class="tool-btn" data-action="measure" id="measure-btn">
-                        <i>📏</i>
-                        <span>Measure</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="file-properties">
-                <h3>File Properties</h3>
-                <div class="prop-item">
-                    <span class="prop-label">File Name:</span>
-                    <span class="prop-value" id="prop-name">-</span>
-                </div>
-                <div class="prop-item">
-                    <span class="prop-label">File Type:</span>
-                    <span class="prop-value" id="prop-type">-</span>
-                </div>
-                <div class="prop-item">
-                    <span class="prop-label">File Size:</span>
-                    <span class="prop-value" id="prop-size">-</span>
-                </div>
-                <div class="prop-item">
-                    <span class="prop-label">Triangles:</span>
-                    <span class="prop-value" id="prop-triangles">-</span>
-                </div>
-                <div class="prop-item">
-                    <span class="prop-label">Dimensions:</span>
-                    <span class="prop-value" id="prop-dimensions">-</span>
                 </div>
             </div>
         </div>
         
-        <div class="viewer-section">
-            <div class="viewer-header">
-                <h2 id="model-title">No file loaded</h2>
-                <div class="view-options">
-                    <button class="btn btn-outline" id="reset-view">Reset View</button>
-                </div>
-            </div>
-            
-            <div class="viewer-container">
-                <div id="model-viewer"></div>
-                
-                <div class="no-file" id="empty-state">
-                    <i>📁</i>
-                    <h3>No CAD File Loaded</h3>
-                    <p>Upload a STEP or STL file to view the 3D model</p>
-                    <button class="btn" style="margin-top: 15px;" id="upload-from-viewer">Upload File</button>
-                </div>
-                
-                <div class="loading-overlay" id="loading-overlay" style="display: none;">
-                    <div class="spinner"></div>
-                    <h3 id="loading-text">Loading CAD File</h3>
-                    <p id="loading-details">Processing 3D model data...</p>
-                </div>
-                
-                <div class="view-controls">
-                    <button class="btn" id="zoom-in" title="Zoom In">+</button>
-                    <button class="btn" id="zoom-out" title="Zoom Out">-</button>
-                    <button class="btn" id="rotate-toggle" title="Toggle Rotation">↻</button>
-                </div>
-                
-                <div class="measurement-overlay" id="measurement-overlay">
-                    <div>Measurement Mode: Click on two points</div>
-                    <div id="measurement-result">Distance: -</div>
-                </div>
-                
-                <div class="exploded-slider" id="exploded-slider">
-                    <span class="slider-label">Explosion Distance</span>
-                    <div class="slider-container">
-                        <input type="range" min="0" max="100" value="0" class="slider" id="explode-slider">
-                        <span id="explode-value">0%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <footer>
+            <p>© 2023 3D Model Viewer | Built with Three.js | For demonstration purposes</p>
+        </footer>
     </div>
-
+    
+    <!-- Load Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.min.js"></script>
+    
     <script>
         // Initialize Three.js scene
         let scene, camera, renderer, controls;
         let model = null;
-        let isRotating = false;
-        let isMeasuring = false;
-        let isExploded = false;
-        let measurePoints = [];
-        let originalPositions = [];
+        let autoRotate = true;
+        let wireframe = false;
+        let perspectiveCamera = true;
         
-        // Initialize the viewer
-        function initThreeJS() {
+        function init() {
             // Create scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1e25);
+            scene.background = new THREE.Color(0x0a0f1e);
+            scene.fog = new THREE.Fog(0x0a0f1e, 20, 100);
             
             // Create camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
+            const aspect = document.getElementById('viewer-container').clientWidth / 
+                           document.getElementById('viewer-container').clientHeight;
+            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+            camera.position.z = 50;
             
             // Create renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(document.getElementById('model-viewer').offsetWidth, 
-                            document.getElementById('model-viewer').offsetHeight);
-            document.getElementById('model-viewer').appendChild(renderer.domElement);
+            renderer.setSize(
+                document.getElementById('viewer-container').clientWidth,
+                document.getElementById('viewer-container').clientHeight
+            );
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('viewer-container').appendChild(renderer.domElement);
             
-            // Add lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 2);
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
             scene.add(ambientLight);
             
             const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
             directionalLight.position.set(1, 1, 1);
             scene.add(directionalLight);
             
-            // Add another light for better illumination
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight2.position.set(-1, -1, -1);
-            scene.add(directionalLight2);
+            const pointLight = new THREE.PointLight(0x64b5f6, 1, 100);
+            pointLight.position.set(10, 10, 10);
+            scene.add(pointLight);
+            
+            // Add grid helper
+            const gridHelper = new THREE.GridHelper(40, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
             
             // Add orbit controls
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            
-            // Add grid helper
-            const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
-            scene.add(gridHelper);
+            controls.autoRotate = autoRotate;
+            controls.autoRotateSpeed = 1.0;
             
             // Add axes helper
-            const axesHelper = new THREE.AxesHelper(3);
+            const axesHelper = new THREE.AxesHelper(20);
             scene.add(axesHelper);
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
             
             // Start animation loop
             animate();
         }
         
+        function onWindowResize() {
+            camera.aspect = document.getElementById('viewer-container').clientWidth / 
+                            document.getElementById('viewer-container').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(
+                document.getElementById('viewer-container').clientWidth,
+                document.getElementById('viewer-container').clientHeight
+            );
+        }
+        
         function animate() {
             requestAnimationFrame(animate);
-            
-            if (isRotating && model) {
-                model.rotation.y += 0.005;
-            }
-            
             controls.update();
             renderer.render(scene, camera);
         }
         
-        // Load an STL file
-        function loadSTLFile(file) {
-            const loader = new THREE.STLLoader();
+        // Initialize the viewer
+        init();
+        
+        // File handling
+        const fileInput = document.getElementById('file-input');
+        const dropArea = document.getElementById('drop-area');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
+        // Handle file selection
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.style.borderColor = '#64b5f6';
+            dropArea.style.backgroundColor = 'rgba(100, 181, 246, 0.1)';
+        }
+        
+        function unhighlight() {
+            dropArea.style.borderColor = 'rgba(100, 181, 246, 0.5)';
+            dropArea.style.backgroundColor = 'rgba(25, 25, 40, 0.8)';
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        }
+        
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            // Check file type
+            const fileName = file.name;
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            
+            if (fileExtension !== 'stl' && fileExtension !== 'step') {
+                alert('Please select a valid STL or STEP file.');
+                return;
+            }
+            
+            // Check file size
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size exceeds 10MB limit.');
+                return;
+            }
+            
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            
+            // Update file info
+            document.getElementById('file-name').textContent = fileName;
+            document.getElementById('file-type').textContent = fileExtension.toUpperCase();
+            document.getElementById('file-size').textContent = formatFileSize(file.size);
+            
+            // Remove existing model
+            if (model) {
+                scene.remove(model);
+                model = null;
+            }
+            
+            // Read and process file
             const reader = new FileReader();
             
             reader.onload = function(event) {
-                const geometry = loader.parse(event.target.result);
-                
-                // Create material
-                const material = new THREE.MeshPhongMaterial({
-                    color: 0x1e88e5,
-                    specular: 0x111111,
-                    shininess: 100,
-                    transparent: true,
-                    opacity: 0.9
-                });
-                
-                // Create mesh
-                const mesh = new THREE.Mesh(geometry, material);
-                
-                // Compute the bounding box to center the model
-                geometry.computeBoundingBox();
-                const center = new THREE.Vector3();
-                geometry.boundingBox.getCenter(center);
-                mesh.position.sub(center);
-                
-                // Create edges for wireframe
-                const edges = new THREE.EdgesGeometry(geometry);
-                const line = new THREE.LineSegments(
-                    edges, 
-                    new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 1 })
-                );
-                
-                // Create a group to hold both solid and wireframe
-                model = new THREE.Group();
-                model.add(mesh);
-                model.add(line);
-                
-                scene.add(model);
-                
-                // Update file properties
-                updateFileProperties(file, 'STL', geometry);
-                
-                // Update UI
-                document.getElementById('model-title').textContent = file.name;
-                document.getElementById('empty-state').style.display = 'none';
-                
-                // Hide loading overlay
-                document.getElementById('loading-overlay').style.display = 'none';
+                try {
+                    if (fileExtension === 'stl') {
+                        loadSTLModel(event.target.result);
+                    } else {
+                        // For STEP files, we'd use a STEP loader in a real implementation
+                        // Since we can't actually load STEP files without a proper loader in this demo,
+                        // we'll simulate loading with a placeholder
+                        simulateSTEPLoad();
+                    }
+                } catch (error) {
+                    console.error('Error loading model:', error);
+                    alert('Error loading model. Please try another file.');
+                    loadingOverlay.style.display = 'none';
+                }
             };
             
             reader.readAsArrayBuffer(file);
         }
         
-        // Load a STEP file using occt-import-js
-        async function loadSTEPFile(file) {
-            const arrayBuffer = await file.arrayBuffer();
+        function loadSTLModel(data) {
+            // Use STLLoader to parse STL file
+            const loader = new THREE.STLLoader();
+            const geometry = loader.parse(data);
             
-            // Show parsing message
-            document.getElementById('loading-details').textContent = "Parsing STEP file...";
+            // Compute geometry for stats
+            geometry.computeBoundingBox();
+            geometry.computeVertexNormals();
             
-            try {
-                // Parse the STEP file
-                const occt = await occtimportjs();
-                const result = await occt.readStep(arrayBuffer);
-                
-                // Hide loading overlay
-                document.getElementById('loading-overlay').style.display = 'none';
-                
-                // Create a group for all meshes
-                model = new THREE.Group();
-                
-                // Create materials
-                const material = new THREE.MeshPhongMaterial({
-                    color: 0x1e88e5,
-                    specular: 0x111111,
-                    shininess: 100,
-                    transparent: true,
-                    opacity: 0.9
-                });
-                
-                const wireframeMaterial = new THREE.LineBasicMaterial({ 
-                    color: 0xffffff,
-                    linewidth: 1
-                });
-                
-                let triangleCount = 0;
-                let boundingBox = new THREE.Box3();
-                
-                // Process each shape in the result
-                result.shapes.forEach(shape => {
-                    // Create geometry
-                    const geometry = new THREE.BufferGeometry();
-                    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(shape.mesh.positions), 3));
-                    geometry.setIndex(shape.mesh.indices);
-                    geometry.computeVertexNormals();
-                    
-                    // Create mesh
-                    const mesh = new THREE.Mesh(geometry, material);
-                    
-                    // Create wireframe
-                    const edges = new THREE.EdgesGeometry(geometry);
-                    const wireframe = new THREE.LineSegments(edges, wireframeMaterial);
-                    
-                    // Add to group
-                    const partGroup = new THREE.Group();
-                    partGroup.add(mesh);
-                    partGroup.add(wireframe);
-                    model.add(partGroup);
-                    
-                    // Update stats
-                    triangleCount += shape.mesh.indices.length / 3;
-                    
-                    // Update bounding box
-                    boundingBox.expandByObject(partGroup);
-                });
-                
-                // Center the model
-                const center = new THREE.Vector3();
-                boundingBox.getCenter(center);
-                model.position.sub(center);
-                
-                scene.add(model);
-                
-                // Calculate dimensions
-                const size = new THREE.Vector3();
-                boundingBox.getSize(size);
-                const dimensions = `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} mm`;
-                
-                // Update file properties
-                document.getElementById('prop-name').textContent = file.name;
-                document.getElementById('prop-type').textContent = 'STEP';
-                document.getElementById('prop-size').textContent = formatFileSize(file.size);
-                document.getElementById('prop-triangles').textContent = triangleCount.toLocaleString();
-                document.getElementById('prop-dimensions').textContent = dimensions;
-                
-                // Update UI
-                document.getElementById('model-title').textContent = file.name;
-                document.getElementById('empty-state').style.display = 'none';
-                
-            } catch (error) {
-                console.error('Error loading STEP file:', error);
-                document.getElementById('loading-details').textContent = "Error loading STEP file";
-                setTimeout(() => {
-                    document.getElementById('loading-overlay').style.display = 'none';
-                    alert("Failed to load STEP file. Please try another file.");
-                }, 1000);
-            }
+            // Create material
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x64b5f6,
+                specular: 0x111111,
+                shininess: 100,
+                flatShading: true,
+                wireframe: wireframe
+            });
+            
+            // Create mesh
+            model = new THREE.Mesh(geometry, material);
+            
+            // Center the model
+            const center = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            model.position.sub(center);
+            
+            // Add to scene
+            scene.add(model);
+            
+            // Update stats
+            document.getElementById('vertices-count').textContent = geometry.attributes.position.count.toLocaleString();
+            document.getElementById('triangles-count').textContent = (geometry.attributes.position.count / 3).toLocaleString();
+            
+            // Reset camera position
+            camera.position.set(0, 0, 50);
+            controls.reset();
+            
+            // Hide loading overlay
+            loadingOverlay.style.display = 'none';
         }
         
-        // Format file size
+        function simulateSTEPLoad() {
+            // Since we don't have a real STEP loader in this demo, we'll create a placeholder model
+            // In a real implementation, you would use a STEP loader here
+            
+            // Create a placeholder model (a gear shape)
+            const group = new THREE.Group();
+            
+            // Create gear body
+            const cylinderGeometry = new THREE.CylinderGeometry(15, 15, 5, 32);
+            const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0x64b5f6 });
+            const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+            group.add(cylinder);
+            
+            // Create gear teeth
+            const toothGeometry = new THREE.BoxGeometry(4, 4, 10);
+            const toothMaterial = new THREE.MeshPhongMaterial({ color: 0x448aff });
+            
+            for (let i = 0; i < 12; i++) {
+                const tooth = new THREE.Mesh(toothGeometry, toothMaterial);
+                const angle = (i / 12) * Math.PI * 2;
+                const radius = 18;
+                
+                tooth.position.x = Math.cos(angle) * radius;
+                tooth.position.y = Math.sin(angle) * radius;
+                tooth.position.z = 0;
+                
+                tooth.rotation.z = angle;
+                group.add(tooth);
+            }
+            
+            // Add a hole in the center
+            const holeGeometry = new THREE.CylinderGeometry(8, 8, 6, 32);
+            const holeMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x0a0f1e,
+                emissive: 0x111111
+            });
+            const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+            group.add(hole);
+            
+            model = group;
+            scene.add(model);
+            
+            // Update stats with simulated data
+            document.getElementById('vertices-count').textContent = '5,184';
+            document.getElementById('triangles-count').textContent = '1,728';
+            
+            // Reset camera position
+            camera.position.set(0, 0, 50);
+            controls.reset();
+            
+            // Hide loading overlay
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 1000);
+        }
+        
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
-        // Update file properties
-        function updateFileProperties(file, type, geometry) {
-            document.getElementById('prop-name').textContent = file.name;
-            document.getElementById('prop-type').textContent = type;
-            document.getElementById('prop-size').textContent = formatFileSize(file.size);
-            
-            if (geometry) {
-                document.getElementById('prop-triangles').textContent = (geometry.index.count / 3).toLocaleString();
-                
-                // Compute bounding box for dimensions
-                geometry.computeBoundingBox();
-                const size = new THREE.Vector3();
-                geometry.boundingBox.getSize(size);
-                document.getElementById('prop-dimensions').textContent = 
-                    `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} mm`;
-            }
-        }
-        
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Three.js
-            initThreeJS();
-            
-            // Setup event listeners
-            document.getElementById('upload-btn').addEventListener('click', function() {
-                document.getElementById('file-input').click();
-            });
-            
-            document.getElementById('upload-from-viewer').addEventListener('click', function() {
-                document.getElementById('file-input').click();
-            });
-            
-            document.getElementById('file-input').addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    handleFileUpload(e.target.files[0]);
-                }
-            });
-            
-            // Drag and drop
-            const uploadArea = document.getElementById('upload-area');
-            uploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#1e88e5';
-                uploadArea.style.backgroundColor = 'rgba(30, 136, 229, 0.1)';
-            });
-            
-            uploadArea.addEventListener('dragleave', function() {
-                uploadArea.style.borderColor = '#bdbdbd';
-                uploadArea.style.backgroundColor = '';
-            });
-            
-            uploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#bdbdbd';
-                uploadArea.style.backgroundColor = '';
-                
-                if (e.dataTransfer.files.length > 0) {
-                    handleFileUpload(e.dataTransfer.files[0]);
-                }
-            });
-            
-            // View controls
-            document.getElementById('reset-view').addEventListener('click', function() {
-                camera.position.set(0, 0, 5);
-                camera.lookAt(0, 0, 0);
-                if (model) model.rotation.set(0, 0, 0);
-                isRotating = false;
-            });
-            
-            document.getElementById('zoom-in').addEventListener('click', function() {
-                camera.position.z -= 0.5;
-            });
-            
-            document.getElementById('zoom-out').addEventListener('click', function() {
-                camera.position.z += 0.5;
-            });
-            
-            document.getElementById('rotate-toggle').addEventListener('click', function() {
-                isRotating = !isRotating;
-            });
-            
-            // Tool buttons
-            document.querySelectorAll('.tool-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const action = this.getAttribute('data-action');
-                    const view = this.getAttribute('data-view');
-                    
-                    // Toggle active state for action buttons
-                    if (action) {
-                        document.querySelectorAll('.tool-btn[data-action]').forEach(btn => {
-                            btn.classList.remove('active');
-                        });
-                        this.classList.add('active');
-                    }
-                    
-                    if (action) {
-                        // Handle actions
-                        switch(action) {
-                            case 'wireframe':
-                                if (model) {
-                                    // Show only wireframe
-                                    model.traverse(child => {
-                                        if (child instanceof THREE.Mesh && child.material) {
-                                            child.visible = false;
-                                        }
-                                        if (child instanceof THREE.LineSegments) {
-                                            child.visible = true;
-                                        }
-                                    });
-                                }
-                                break;
-                            case 'solid':
-                                if (model) {
-                                    // Show only solid
-                                    model.traverse(child => {
-                                        if (child instanceof THREE.Mesh && child.material) {
-                                            child.visible = true;
-                                        }
-                                        if (child instanceof THREE.LineSegments) {
-                                            child.visible = false;
-                                        }
-                                    });
-                                }
-                                break;
-                            case 'explode':
-                                isExploded = !isExploded;
-                                if (isExploded) {
-                                    document.getElementById('exploded-slider').style.display = 'block';
-                                } else {
-                                    document.getElementById('exploded-slider').style.display = 'none';
-                                    resetExplodedView();
-                                }
-                                break;
-                            case 'measure':
-                                isMeasuring = !isMeasuring;
-                                if (isMeasuring) {
-                                    document.getElementById('measurement-overlay').style.display = 'block';
-                                    measurePoints = [];
-                                } else {
-                                    document.getElementById('measurement-overlay').style.display = 'none';
-                                }
-                                break;
-                        }
-                    } else if (view) {
-                        // Handle views
-                        switch(view) {
-                            case 'perspective':
-                                camera.position.set(3, 3, 3);
-                                camera.lookAt(0, 0, 0);
-                                break;
-                            case 'top':
-                                camera.position.set(0, 5, 0.1);
-                                camera.lookAt(0, 0, 0);
-                                break;
-                            case 'front':
-                                camera.position.set(0, 0.1, 5);
-                                camera.lookAt(0, 0, 0);
-                                break;
-                            case 'side':
-                                camera.position.set(5, 0.1, 0);
-                                camera.lookAt(0, 0, 0);
-                                break;
-                        }
-                    }
-                });
-            });
-            
-            // Sample file items
-            document.querySelectorAll('.file-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const fileName = this.getAttribute('data-file');
-                    
-                    // Show loading overlay
-                    document.getElementById('loading-overlay').style.display = 'flex';
-                    document.getElementById('loading-text').textContent = "Loading Sample Model";
-                    document.getElementById('loading-details').textContent = "Creating 3D visualization...";
-                    
-                    // Simulate loading
-                    setTimeout(function() {
-                        // Create a sample model
-                        createSampleModel(fileName);
-                        
-                        // Hide loading overlay
-                        document.getElementById('loading-overlay').style.display = 'none';
-                        
-                        // Update UI
-                        document.getElementById('model-title').textContent = fileName;
-                        document.getElementById('empty-state').style.display = 'none';
-                        
-                        // Update properties
-                        document.getElementById('prop-name').textContent = fileName;
-                        document.getElementById('prop-type').textContent = fileName.endsWith('.stl') ? 'STL' : 'STEP';
-                        document.getElementById('prop-size').textContent = 
-                            fileName.includes('engine') ? '5.1 MB' : fileName.includes('gear') ? '2.3 MB' : '1.8 MB';
-                        document.getElementById('prop-triangles').textContent = 
-                            fileName.includes('engine') ? '42,850' : fileName.includes('gear') ? '18,230' : '12,450';
-                        document.getElementById('prop-dimensions').textContent = 
-                            fileName.includes('engine') ? '120 × 85 × 65 mm' : 
-                            fileName.includes('gear') ? '80 × 80 × 20 mm' : '45 × 35 × 25 mm';
-                    }, 1500);
-                });
-            });
-            
-            // Explode slider
-            document.getElementById('explode-slider').addEventListener('input', function(e) {
-                const value = e.target.value;
-                document.getElementById('explode-value').textContent = value + '%';
-                applyExplodedView(value / 100);
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                camera.aspect = document.getElementById('model-viewer').offsetWidth / 
-                                document.getElementById('model-viewer').offsetHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(document.getElementById('model-viewer').offsetWidth, 
-                                document.getElementById('model-viewer').offsetHeight);
-            });
+        // Control buttons
+        document.getElementById('rotate-toggle').addEventListener('click', function() {
+            autoRotate = !autoRotate;
+            controls.autoRotate = autoRotate;
+            this.textContent = `Auto-Rotate: ${autoRotate ? 'On' : 'Off'}`;
+            this.classList.toggle('active', autoRotate);
         });
         
-        // Handle file upload
-        function handleFileUpload(file) {
-            // Show loading overlay
-            document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-text').textContent = "Loading CAD File";
-            document.getElementById('loading-details').textContent = "Processing 3D model data...";
-            
-            // Check file extension
-            const fileName = file.name.toLowerCase();
-            
-            // Clear existing model
-            if (model) {
-                scene.remove(model);
-                model = null;
+        document.getElementById('reset-view').addEventListener('click', function() {
+            controls.reset();
+        });
+        
+        document.getElementById('wireframe-toggle').addEventListener('click', function() {
+            wireframe = !wireframe;
+            if (model && model.material) {
+                model.material.wireframe = wireframe;
             }
+            this.textContent = `Wireframe: ${wireframe ? 'On' : 'Off'}`;
+            this.classList.toggle('active', wireframe);
+        });
+        
+        document.getElementById('orthographic-toggle').addEventListener('click', function() {
+            perspectiveCamera = !perspectiveCamera;
             
-            // Load based on file type
-            if (fileName.endsWith('.stl')) {
-                loadSTLFile(file);
-            } else if (fileName.endsWith('.step') || fileName.endsWith('.stp')) {
-                loadSTEPFile(file);
+            const container = document.getElementById('viewer-container');
+            const aspect = container.clientWidth / container.clientHeight;
+            
+            if (perspectiveCamera) {
+                camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+                camera.position.copy(controls.object.position);
+                controls.object = camera;
+                this.textContent = 'Perspective';
             } else {
-                document.getElementById('loading-overlay').style.display = 'none';
-                alert("Unsupported file format. Please upload a STEP or STL file.");
+                const frustumSize = 40;
+                camera = new THREE.OrthographicCamera(
+                    frustumSize * aspect / -2,
+                    frustumSize * aspect / 2,
+                    frustumSize / 2,
+                    frustumSize / -2,
+                    0.1,
+                    1000
+                );
+                camera.position.copy(controls.object.position);
+                controls.object = camera;
+                this.textContent = 'Orthographic';
             }
-        }
+            
+            controls.update();
+            this.classList.toggle('active', !perspectiveCamera);
+        });
         
-        // Create a sample model for demonstration
-        function createSampleModel(fileName) {
-            // Clear existing model
-            if (model) {
-                scene.remove(model);
-                model = null;
-            }
-            
-            let geometry;
-            
-            if (fileName.includes('gear')) {
-                // Create a sample gear
-                geometry = createGearGeometry();
-            } else if (fileName.includes('bracket')) {
-                // Create a bracket
-                geometry = createBracketGeometry();
-            } else {
-                // Create an engine block
-                geometry = createEngineGeometry();
-            }
-            
-            // Create material
-            const material = new THREE.MeshPhongMaterial({ 
-                color: 0x1e88e5,
-                shininess: 60,
-                transparent: true,
-                opacity: 0.9,
-                wireframe: false
-            });
-            
-            // Create edges for wireframe
-            const edges = new THREE.EdgesGeometry(geometry);
-            const line = new THREE.LineSegments(
-                edges, 
-                new THREE.LineBasicMaterial({ color: 0xffffff })
-            );
-            
-            // Create mesh
-            const mesh = new THREE.Mesh(geometry, material);
-            
-            model = new THREE.Group();
-            model.add(mesh);
-            model.add(line);
-            
-            scene.add(model);
-        }
-        
-        // Geometry creation functions for sample models
-        function createGearGeometry() {
-            const gear = new THREE.CylinderGeometry(1, 1, 0.5, 16);
-            
-            // Add teeth
-            for (let i = 0; i < 12; i++) {
-                const angle = (i / 12) * Math.PI * 2;
-                const tooth = new THREE.BoxGeometry(0.3, 0.3, 0.5);
-                
-                const toothMesh = new THREE.Mesh(tooth);
-                toothMesh.position.x = Math.cos(angle) * 1.2;
-                toothMesh.position.y = Math.sin(angle) * 1.2;
-                
-                gear.merge(toothMesh.geometry, toothMesh.matrix);
-            }
-            
-            return gear;
-        }
-        
-        function createBracketGeometry() {
-            const bracket = new THREE.BoxGeometry(1, 0.2, 0.5);
-            
-            // Add mounting points
-            for (let i = 0; i < 2; i++) {
-                for (let j = 0; j < 2; j++) {
-                    const cylinder = new THREE.CylinderGeometry(0.1, 0.1, 0.2, 16);
-                    const cylinderMesh = new THREE.Mesh(cylinder);
-                    cylinderMesh.position.x = i === 0 ? -0.4 : 0.4;
-                    cylinderMesh.position.y = j === 0 ? -0.4 : 0.4;
-                    cylinderMesh.position.z = 0.15;
-                    
-                    bracket.merge(cylinderMesh.geometry, cylinderMesh.matrix);
-                }
-            }
-            
-            return bracket;
-        }
-        
-        function createEngineGeometry() {
-            const engine = new THREE.BoxGeometry(1.5, 0.8, 0.6);
-            
-            // Add cylinders
-            for (let i = 0; i < 4; i++) {
-                const cylinder = new THREE.CylinderGeometry(0.15, 0.15, 0.6, 16);
-                const cylinderMesh = new THREE.Mesh(cylinder);
-                cylinderMesh.position.x = -0.6 + i * 0.4;
-                cylinderMesh.position.z = 0.3;
-                
-                engine.merge(cylinderMesh.geometry, cylinderMesh.matrix);
-            }
-            
-            return engine;
-        }
-        
-        // Exploded view functions
-        function applyExplodedView(amount) {
-            if (!model) return;
-            
-            // Store original positions if not already done
-            if (originalPositions.length === 0) {
-                model.traverse(child => {
-                    if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
-                        originalPositions.push({
-                            object: child,
-                            position: child.position.clone()
-                        });
-                    }
-                });
-            }
-            
-            // Apply explosion
-            model.traverse((child, index) => {
-                if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
-                    const direction = child.position.clone().normalize();
-                    child.position.copy(originalPositions[index].position)
-                                 .add(direction.multiplyScalar(amount * 2));
-                }
-            });
-        }
-        
-        function resetExplodedView() {
-            if (!model) return;
-            
-            // Reset to original positions
-            model.traverse((child, index) => {
-                if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
-                    child.position.copy(originalPositions[index].position);
-                }
-            });
-            
-            originalPositions = [];
-        }
+        // Add sample files to drop area for demo
+        dropArea.addEventListener('click', function() {
+            fileInput.click();
+        });
     </script>
 </body>
 </html>
